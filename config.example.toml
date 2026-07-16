@@ -1,0 +1,26 @@
+# icloud-relay-lookup configuration (optional).
+# Copy to ~/.config/icloud-relay-lookup/config.toml to override defaults.
+# No credentials are needed — Apple's egress IP list is public.
+
+[apple]
+# Override the egress IP ranges download URL (optional).
+# The ICLOUD_RELAY_LOOKUP_URL environment variable overrides this value.
+# url = "https://mask-api.icloud.com/egress-ip-ranges.csv"
+
+# How old the cached list may be before `check` auto-revalidates it. Floored
+# at 60 minutes: Apple serves the list with cache-control max-age=3600, so
+# refetching more often is pointless. Revalidation is an ETag conditional GET
+# (an unchanged list costs almost no bandwidth).
+# The ICLOUD_RELAY_LOOKUP_TTL_MINUTES environment variable overrides.
+# ttl_minutes = 60
+
+# Whether `check` auto-revalidates a stale list. Disable to keep checks
+# strictly offline (or pass --no-update per call).
+# Env: ICLOUD_RELAY_LOOKUP_AUTO_UPDATE.
+# auto_update = true
+
+[store]
+# Directory holding the cached list (egress-ip-ranges.csv + meta.json).
+# Default: ~/.local/share/icloud-relay-lookup
+# The ICLOUD_RELAY_LOOKUP_STORE_DIR environment variable overrides this value.
+# dir = "~/.local/share/icloud-relay-lookup"
