@@ -3,11 +3,11 @@
 All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.0] - 2026-07-16
 
 ### Added
 
-- Initial implementation.
+- Initial release.
 - `check <IP>...` — report whether IPs are Apple iCloud Private Relay egress
   IPs, answered offline from the cached list. A single positional IP in text
   mode uses grep-style exit codes (`0` = relay, `1` = not, `2` = error);

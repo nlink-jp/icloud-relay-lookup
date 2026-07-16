@@ -19,7 +19,17 @@ Together they profile an IP from four angles, over both CLI pipes and MCP.
 
 ## Install
 
-Not yet released. To build from source (Go 1.25+):
+Homebrew (macOS, Apple Silicon — signed & notarized prebuilt binary):
+
+```sh
+brew install nlink-jp/tap/icloud-relay-lookup
+```
+
+Or grab a prebuilt binary for linux/amd64, linux/arm64, darwin/arm64, or
+windows/amd64 from the
+[releases page](https://github.com/nlink-jp/icloud-relay-lookup/releases).
+
+To build from source (Go 1.25+):
 
 ```sh
 git clone https://github.com/nlink-jp/icloud-relay-lookup

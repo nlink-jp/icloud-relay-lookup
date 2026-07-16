@@ -18,7 +18,17 @@ Private Relay 出口からのアクセスは「匿名化経由だが、実体は
 
 ## インストール
 
-未リリースです。ソースからビルド（Go 1.25+）:
+Homebrew（macOS, Apple Silicon — 署名 + notarize 済みビルド済みバイナリ）:
+
+```sh
+brew install nlink-jp/tap/icloud-relay-lookup
+```
+
+または [リリースページ](https://github.com/nlink-jp/icloud-relay-lookup/releases)
+から linux/amd64、linux/arm64、darwin/arm64、windows/amd64 のビルド済み
+バイナリを取得してください。
+
+ソースからビルド（Go 1.25+）:
 
 ```sh
 git clone https://github.com/nlink-jp/icloud-relay-lookup
