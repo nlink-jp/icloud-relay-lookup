@@ -60,7 +60,8 @@ for the "why".
 
 ## Status
 
-Phase 1 in development (`_wip/`, local only — not yet pushed).
+Phase 1 + Phase 2 implemented (`_wip/`, local only — not yet pushed). Next:
+Phase 3 (release + integration). Not yet released; no version tags.
 
 ## Communication Language
 
