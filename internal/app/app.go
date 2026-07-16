@@ -42,6 +42,8 @@ func Run(args []string, version string) int {
 		return cmdUpdate(rest)
 	case "status":
 		return cmdStatus(rest)
+	case "mcp":
+		return cmdMCP(rest, version)
 	case "version", "--version", "-v":
 		fmt.Println("icloud-relay-lookup " + version)
 		fmt.Println("Data: Apple iCloud Private Relay egress IP ranges (https://mask-api.icloud.com/egress-ip-ranges.csv).")
@@ -66,6 +68,7 @@ Commands:
   check <IP>...   Report whether each IP is a Private Relay egress IP (stdin if no args)
   update          Revalidate/download the egress list and rebuild the local store
   status          Show the cached list's freshness and size
+  mcp             Run as a local MCP server (stdio)
   version         Print the version
 
 check flags:

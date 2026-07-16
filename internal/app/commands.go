@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nlink-jp/icloud-relay-lookup/internal/engine"
+	"github.com/nlink-jp/icloud-relay-lookup/internal/mcp"
 	"github.com/nlink-jp/icloud-relay-lookup/internal/relaylist"
 )
 
@@ -173,6 +174,27 @@ func runStatus(out, errw io.Writer, e *engine.Engine) int {
 		fmt.Fprintf(out, "status:  STALE — %s old; run 'icloud-relay-lookup update'\n", roundAge(age))
 	} else {
 		fmt.Fprintln(out, "status:  OK")
+	}
+	return 0
+}
+
+// ---- mcp ------------------------------------------------------------------
+
+func cmdMCP(args []string, version string) int {
+	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
+	var c commonFlags
+	c.register(fs, true)
+	if err := fs.Parse(args); err != nil {
+		return exitError
+	}
+	e, err := c.buildEngine()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		return exitError
+	}
+	if err := mcp.Serve(context.Background(), e, version, os.Stdin, os.Stdout); err != nil {
+		fmt.Fprintf(os.Stderr, "mcp: %v\n", err)
+		return exitError
 	}
 	return 0
 }
