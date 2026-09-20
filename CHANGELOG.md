@@ -13,6 +13,12 @@ All notable changes to this project are documented here. The format follows
   Ranges are now stated from the inside, with a ceiling. Unreleased: the next
   release carries it.
 
+### Added
+
+- `make verify-release` refuses to publish a darwin zip that carries no
+  notarization marker, or one rebuilt after its marker. The vendored Homebrew
+  templates and packaging scripts are in sync with the org canonical.
+
 ## [0.1.0] - 2026-07-16
 
 ### Added
