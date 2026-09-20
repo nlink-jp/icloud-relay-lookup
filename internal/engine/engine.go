@@ -84,7 +84,7 @@ func (e *Engine) LoadList() (*relaylist.List, error) {
 		}
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	entries, _, err := relaylist.Parse(f)
 	if err != nil {
 		return nil, fmt.Errorf("parse cached list: %w", err)
@@ -154,7 +154,7 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 	}
 
 	raw, err := io.ReadAll(res.Body)
-	res.Body.Close()
+	_ = res.Body.Close()
 	if err != nil {
 		return UpdateResult{}, fmt.Errorf("download %s: %w", e.Cfg.URL, err)
 	}
@@ -208,7 +208,8 @@ func (e *Engine) writeFileAtomic(path string, data []byte) error {
 		return err
 	}
 	tmpName := tmp.Name()
-	defer os.Remove(tmpName) // no-op after a successful rename
+	// Cleanup: a no-op once the rename below has succeeded.
+	defer func() { _ = os.Remove(tmpName) }()
 
 	_, err = tmp.Write(data)
 	if cerr := tmp.Close(); err == nil {

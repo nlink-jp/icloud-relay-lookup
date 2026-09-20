@@ -15,7 +15,7 @@ func TestFetchOK(t *testing.T) {
 		gotUA = r.Header.Get("User-Agent")
 		gotINM = r.Header.Get("If-None-Match")
 		w.Header().Set("ETag", `"v2"`)
-		io.WriteString(w, "10.0.0.0/24,US,US-CA,San Jose,\n")
+		_, _ = io.WriteString(w, "10.0.0.0/24,US,US-CA,San Jose,\n")
 	}))
 	defer srv.Close()
 
@@ -24,7 +24,7 @@ func TestFetchOK(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Fetch: %v", err)
 	}
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	if res.NotModified {
 		t.Error("NotModified = true, want false")
 	}

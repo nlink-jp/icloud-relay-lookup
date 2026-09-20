@@ -16,7 +16,7 @@ func isolateEnv(t *testing.T) {
 		"XDG_CONFIG_HOME", "XDG_DATA_HOME",
 	} {
 		t.Setenv(k, "")
-		os.Unsetenv(k)
+		_ = os.Unsetenv(k)
 	}
 }
 

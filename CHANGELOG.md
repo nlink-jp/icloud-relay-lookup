@@ -13,6 +13,13 @@ All notable changes to this project are documented here. The format follows
   Ranges are now stated from the inside, with a ceiling. Unreleased: the next
   release carries it.
 
+- `make check` is green again: `make lint` failed on errcheck findings for every
+  `fmt.Fprint*` write to the CLI's own stdout/stderr, and on deliberate discards
+  that did not say they were deliberate. No behaviour change.
+  - `.golangci.yml` excludes only `fmt.Fprint*` from errcheck, so errcheck stays
+    meaningful everywhere else (the atomic write checks its `Close`).
+  - Every other unchecked return is now `_ =` with the reason beside it.
+
 ### Added
 
 - `make verify-release` refuses to publish a darwin zip that carries no

@@ -19,6 +19,16 @@ make build-all  # cross-compile linux/{amd64,arm64}, darwin/arm64, windows/amd64
 make verify-release  # gate: .notarized marker + freshness (run before upload)
 ```
 
+`make lint` is `golangci-lint run ./...` with the default linter set.
+`.golangci.yml` excludes exactly one thing from errcheck — `fmt.Fprint*`, which
+in this repository only ever writes to the stdout/stderr that `app.Run` is
+handed — and nothing else. Every other unchecked return is written `_ =` at the
+call site with the reason beside it, because an unchecked `Close` on a file this
+tool wrote is a real defect class: `Engine.writeFileAtomic` is atomic only because the `Close` error
+is checked before the rename. The exclusion matches by function name, not by
+destination, so do not write a file with `fmt.Fprint*`. The four sibling lookup
+tools carry the same configuration.
+
 Go 1.25+. **No external dependencies** — standard library only.
 
 ## Layout

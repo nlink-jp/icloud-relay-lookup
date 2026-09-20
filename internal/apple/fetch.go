@@ -68,11 +68,11 @@ func (f *HTTPFetcher) Fetch(ctx context.Context, rawURL, etag string) (FetchResu
 	case http.StatusOK:
 		return FetchResult{Body: resp.Body, ETag: resp.Header.Get("ETag")}, nil
 	case http.StatusNotModified:
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return FetchResult{ETag: etag, NotModified: true}, nil
 	default:
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		resp.Body.Close()
+		_ = resp.Body.Close()
 		return FetchResult{}, fmt.Errorf("download %s: HTTP %d: %s", rawURL, resp.StatusCode, trimBody(body))
 	}
 }
