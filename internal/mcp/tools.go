@@ -24,6 +24,17 @@ const Instructions = "icloud-relay-lookup reports whether an IP address is an Ap
 	"An IP is a Private Relay egress when is_private_relay is true; country/region/city are the geo hints Apple " +
 	"publishes for that egress range. Call get_usage for the full tool reference and error-recovery table."
 
+// obj builds a tool's input schema. Every schema goes through here so that
+// org ADR-021 §10's `additionalProperties: false` is set once instead of being
+// remembered per tool — the next tool added gets the closed schema for free.
+func obj(props map[string]any, required ...string) map[string]any {
+	s := map[string]any{"type": "object", "properties": props, "additionalProperties": false}
+	if len(required) > 0 {
+		s["required"] = required
+	}
+	return s
+}
+
 // toolsList returns the advertised tool set with JSON Schema for each input.
 func (s *server) toolsList() any {
 	strArray := map[string]any{"type": "array", "items": map[string]any{"type": "string"}}
@@ -32,28 +43,25 @@ func (s *server) toolsList() any {
 			{
 				"name":        "get_usage",
 				"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 			{
 				"name":        "check_ip",
 				"description": "Report whether one or more IP addresses are Apple iCloud Private Relay egress IPs, answered offline from the cached list. Returns is_private_relay per address, plus the matched prefix and geo hints (country / region / city) on a hit.",
-				"inputSchema": map[string]any{
-					"type": "object",
-					"properties": map[string]any{
-						"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
-						"ips": strArray,
-					},
-				},
+				"inputSchema": obj(map[string]any{
+					"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
+					"ips": strArray,
+				}),
 			},
 			{
 				"name":        "update_list",
 				"description": "Revalidate/download Apple's egress IP ranges list and rebuild the local store. Uses an ETag conditional GET, so an unchanged list is nearly free. No credentials required.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 			{
 				"name":        "cache_status",
 				"description": "Report the cached list's fetch time, range counts (v4/v6), ETag, source, and whether it is stale.",
-				"inputSchema": map[string]any{"type": "object", "properties": map[string]any{}},
+				"inputSchema": obj(map[string]any{}),
 			},
 		},
 	}
