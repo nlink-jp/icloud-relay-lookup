@@ -5,6 +5,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **An MCP tool call carrying an argument the tool does not declare now fails
+  instead of being quietly ignored.** This is a deliberate behaviour change,
+  required by org ADR-021 §4. Until now a misspelt argument was dropped and the
+  call ran without it: a batch of addresses sent under a misspelt `ips`
+  checked nothing at all and came back with "provide 'ip'", which reads as a
+  missing argument rather than a mistyped one. Every tool — including
+  `get_usage`, `update_list` and `cache_status`, which take no arguments — now
+  decodes with `DisallowUnknownFields` and refuses the call, naming the
+  offending field: `arguments: json: unknown field "ipx"`.
+
+  A malformed argument object is refused for the same reason. The decode error
+  used to be discarded along with the unknown field, so `{"ip": 8}` ran as if
+  no address had been supplied. It now reports the type mismatch.
+
+  Nothing runs before the arguments decode, so a rejected call reads no list
+  and downloads nothing. Omitting `arguments`, or sending `{}` or `null`, still
+  means "no arguments" and is not an error. There is no compatibility shim: an
+  argument name this server does not declare has never meant anything, so the
+  only fix is to correct it.
+
 ### Fixed
 
 - **Every MCP tool input schema is closed.** The schemas omitted
@@ -13,9 +35,7 @@ All notable changes to this project are documented here. The format follows
   single `obj()` helper that sets the flag, and an arch test fails if a tool's
   schema omits it — org ADR-021 §10 requires the test as well as the flag,
   because a rule stated only in prose is re-decided by whoever adds the next
-  tool. The server's own argument decoding is unchanged and still lenient: it
-  does not use `DisallowUnknownFields`, so an unknown argument that reaches it
-  is ignored rather than refused.
+  tool.
 
 ## [0.1.1] - 2026-09-21
 

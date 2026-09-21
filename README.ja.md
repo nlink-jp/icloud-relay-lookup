@@ -101,6 +101,14 @@ Apple はリストを `ETag` + `cache-control: max-age=3600` 付きで配信し�
 `icloud-relay-lookup mcp` は stdio 上の JSON-RPC 2.0（標準ライブラリのみ）。
 ツールは `check_ip`、`cache_status`、`update_list`、`get_usage`（組み込みの
 操作マニュアル。initialize の `instructions` フィールドでも案内されます）。
+
+**引数は厳格に検査されます.** ツールが宣言していない引数を含む呼び出しは、その
+名前を挙げて失敗します（`arguments: json: unknown field "ipx"`）。従来は無視して
+実行していたため、`ips` の綴り間違いで渡したアドレス群は 1 件も照合されず、
+`provide 'ip'`（引数が無い、という意味の応答）が返っていました。型が違う引数も
+同様に拒否されます。引数のデコードより前には何も実行しません。引数をまったく
+渡さない呼び出しは従来どおり「引数なし」として扱われます。
+
 登録例:
 
 ```json

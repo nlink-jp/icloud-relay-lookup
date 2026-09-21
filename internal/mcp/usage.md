@@ -51,10 +51,21 @@ serves the list with `cache-control: max-age=3600`, so the CLI auto-revalidates
 past a TTL (1-hour floor) with a conditional GET. `cache_status` reports
 `stale:true` once the copy is over 7 days old.
 
+## Arguments are strict
+
+Every tool refuses an argument it does not declare, naming it:
+`arguments: json: unknown field "ipx"`. A wrong-typed argument is refused the
+same way. Nothing runs before the arguments decode, so a rejected call reads no
+list and downloads nothing — fix the name or the type and call again. This is
+the enforcing half of the closed schemas (org ADR-021 §4); a batch sent under a
+misspelt `ips` used to check nothing at all.
+
 ## Recovery table
 
 | Symptom (result text) | What it means | What to do |
 |---|---|---|
+| `arguments: json: unknown field "…"` | An argument name this tool does not declare — usually a typo | Fix the spelling and call again; the named field is the offending one |
+| `arguments: json: cannot unmarshal …` | An argument of the wrong JSON type (`ip` is a string, `ips` an array of strings) | Check the argument's type in the tool list above and call again |
 | `no local egress list …` | The list has not been downloaded | Call `update_list` |
 | `check_ip` → `error:"invalid address"` | The input was not a valid IP | Fix the input |
 | `is_private_relay:false` (no error) | Address is not a known Private Relay egress | Expected; no action |
