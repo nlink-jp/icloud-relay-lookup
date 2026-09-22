@@ -16,7 +16,7 @@ make build      # → dist/icloud-relay-lookup  (NEVER `go build` directly)
 make test       # go test -race -cover ./...
 make check      # lint + test + build-all
 make build-all  # cross-compile linux/{amd64,arm64}, darwin/arm64, windows/amd64
-make verify-release  # gate: .notarized marker + freshness (run before upload)
+make verify-release  # gate: notarized, fresh, runs at this version, clean linux archives (run before upload)
 ```
 
 `make lint` is `golangci-lint run ./...` with the default linter set.
