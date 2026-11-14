@@ -28,7 +28,7 @@ brew install nlink-jp/tap/icloud-relay-lookup
 から linux/amd64、linux/arm64、darwin/arm64、windows/amd64 のビルド済み
 バイナリを取得してください。
 
-ソースからビルド（Go 1.25+）:
+ソースからビルド（Go 1.27.4+）:
 
 ```sh
 git clone https://github.com/nlink-jp/icloud-relay-lookup

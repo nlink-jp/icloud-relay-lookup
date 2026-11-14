@@ -29,7 +29,7 @@ is checked before the rename. The exclusion matches by function name, not by
 destination, so do not write a file with `fmt.Fprint*`. The four sibling lookup
 tools carry the same configuration.
 
-Go 1.25+. **No external dependencies** — standard library only.
+Go 1.27.4+. **No external dependencies** — standard library only.
 
 ## Layout
 
