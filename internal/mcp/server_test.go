@@ -94,7 +94,7 @@ func callTool(t *testing.T, e *engine.Engine, name, args string) (string, bool) 
 func TestInitializeAndToolsList(t *testing.T) {
 	e := newEngine(t, &fakeFetcher{}, false)
 	resps := rpc(t, e,
-		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26"}}`,
+		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`,
 		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list"}`,
 	)
@@ -102,8 +102,8 @@ func TestInitializeAndToolsList(t *testing.T) {
 		t.Fatalf("got %d responses, want 2 (notification must be silent)", len(resps))
 	}
 	init := resps[0]["result"].(map[string]any)
-	if init["protocolVersion"] != "2025-03-26" {
-		t.Errorf("protocolVersion = %v, want the client's echoed", init["protocolVersion"])
+	if init["protocolVersion"] != "2025-06-18" {
+		t.Errorf("protocolVersion = %v, want the requested revision the server supports", init["protocolVersion"])
 	}
 	if info := init["serverInfo"].(map[string]any); info["name"] != "icloud-relay-lookup" {
 		t.Errorf("serverInfo = %v", info)
@@ -264,5 +264,27 @@ func TestMalformedJSONStops(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "-32700") {
 		t.Errorf("no parse error emitted: %q", out.String())
+	}
+}
+
+func TestInitializeNegotiatesProtocolVersion(t *testing.T) {
+	cases := []struct{ params, want string }{
+		{`{"protocolVersion":"2025-11-25"}`, "2025-11-25"},
+		{`{"protocolVersion":"2025-06-18"}`, "2025-06-18"},
+		{`{"protocolVersion":"2024-11-05"}`, "2024-11-05"},
+		// 2025-03-26 requires accepting JSON-RPC batches, which this server does not.
+		{`{"protocolVersion":"2025-03-26"}`, "2025-11-25"},
+		// A revision the server does not satisfy must not be echoed back.
+		{`{"protocolVersion":"2026-07-28"}`, "2025-11-25"},
+		{`{"protocolVersion":""}`, "2025-11-25"},
+		{`{}`, "2025-11-25"},
+		{`not json`, "2025-11-25"},
+		{``, "2025-11-25"},
+	}
+	for _, c := range cases {
+		res := (&server{}).initializeResult(json.RawMessage(c.params)).(map[string]any)
+		if got := res["protocolVersion"]; got != c.want {
+			t.Errorf("initialize %s: protocolVersion = %v, want %s", c.params, got, c.want)
+		}
 	}
 }
