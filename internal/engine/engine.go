@@ -140,6 +140,14 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 		return UpdateResult{}, err
 	}
 
+	// A cancellation that lands after the answer arrived still stops the
+	// update before it writes anything (server-migration §5).
+	if err := ctx.Err(); err != nil {
+		if res.Body != nil {
+			_ = res.Body.Close()
+		}
+		return UpdateResult{}, err
+	}
 	now := e.now().UTC().Truncate(time.Second)
 	if res.NotModified {
 		meta := *prev // res.NotModified implies a validator was sent, so prev != nil
@@ -169,6 +177,9 @@ func (e *Engine) Update(ctx context.Context) (UpdateResult, error) {
 			"%w: %d of %d rows unparseable (previous cache kept)", ErrFormatChange, skipped, total)
 	}
 
+	if err := ctx.Err(); err != nil {
+		return UpdateResult{}, err
+	}
 	list := relaylist.New(entries, now, res.ETag, e.Cfg.URL)
 	v4, v6 := list.FamilyCounts()
 	meta := relaylist.Meta{
