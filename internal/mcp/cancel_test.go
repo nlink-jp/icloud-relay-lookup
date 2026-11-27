@@ -44,6 +44,10 @@ func TestACancelledUpdateLeavesTheStoreAsItWas(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	beforeMeta, err := os.ReadFile(e.Cfg.MetaPath())
+	if err != nil {
+		t.Fatal(err)
+	}
 	wf := waitingFetcher{cancelled: make(chan bool, 4)}
 	e.Fetcher = wf
 	cl := openWith(t, func(ctx context.Context, in io.Reader, w io.Writer) error {
@@ -62,12 +66,17 @@ func TestACancelledUpdateLeavesTheStoreAsItWas(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("the download never returned")
 	}
+	time.Sleep(500 * time.Millisecond) // the handler finishing whatever follows the download
 	after, err := os.ReadFile(e.Cfg.CSVPath())
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(before, after) {
-		t.Error("the store changed although the update was cancelled")
+		t.Error("the list changed although the update was cancelled")
+	}
+	// meta.json is what a 304 rewrites (fetched_at); a cancellation must not.
+	if afterMeta, err := os.ReadFile(e.Cfg.MetaPath()); err != nil || !bytes.Equal(beforeMeta, afterMeta) {
+		t.Errorf("meta.json changed although the update was cancelled (%v)", err)
 	}
 	left, _ := filepath.Glob(filepath.Join(filepath.Dir(e.Cfg.CSVPath()), "*.tmp"))
 	if len(left) != 0 {

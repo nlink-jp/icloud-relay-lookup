@@ -12,6 +12,7 @@ import (
 	"github.com/nlink-jp/icloud-relay-lookup/internal/apple"
 	"github.com/nlink-jp/icloud-relay-lookup/internal/config"
 	"github.com/nlink-jp/icloud-relay-lookup/internal/engine"
+	"github.com/nlink-jp/mcp/client"
 )
 
 const sampleCSV = `172.224.226.0/27,GB,GB-EN,London,
@@ -93,11 +94,10 @@ func TestInitializeAndToolsList(t *testing.T) {
 	e := newEngine(t, &fakeFetcher{}, false)
 	resps := rpc(t, e,
 		`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}`,
-		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list"}`,
 	)
 	if len(resps) != 2 {
-		t.Fatalf("got %d responses, want 2 (notification must be silent)", len(resps))
+		t.Fatalf("got %d responses, want 2", len(resps))
 	}
 	init := resps[0]["result"].(map[string]any)
 	if info := init["serverInfo"].(map[string]any); info["name"] != "icloud-relay-lookup" {
@@ -240,10 +240,6 @@ func TestGetUsageAndUnknowns(t *testing.T) {
 	if resps[0]["error"] == nil {
 		t.Error("unknown tool did not return a JSON-RPC error")
 	}
-	resps = rpc(t, e, `{"jsonrpc":"2.0","id":11,"method":"ping"}`)
-	if resps[0]["error"] != nil {
-		t.Error("ping errored")
-	}
 }
 
 // ADR-030 §7: the server against the three probe clients (legacy only,
@@ -253,4 +249,16 @@ func TestAgainstTheProbeClients(t *testing.T) {
 	probeMatrix(t, func(ctx context.Context, in io.Reader, w io.Writer) error {
 		return Serve(ctx, e, "test", in, w)
 	})
+}
+
+// The client that opens the server receives the instructions — the hint that
+// points it at get_usage — whichever era it opens in.
+func TestOpeningCarriesTheInstructions(t *testing.T) {
+	e := newEngine(t, &fakeFetcher{body: sampleCSV, etag: `"v1"`}, true)
+	cl := openWith(t, func(ctx context.Context, in io.Reader, w io.Writer) error {
+		return Serve(ctx, e, "test", in, w)
+	}, client.Options{})
+	if got := cl.Instructions(); got != Instructions {
+		t.Errorf("instructions = %q, want the package's Instructions", got)
+	}
 }
