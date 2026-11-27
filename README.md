@@ -105,10 +105,10 @@ that probe with `server/discover`) and the earlier `initialize` handshake
 (2025-11-25, 2025-06-18, 2024-11-05). Requests piped in are all answered before
 it exits at end of input.
 
-`icloud-relay-lookup mcp` speaks JSON-RPC 2.0 over stdio (standard library
-only). Tools: `check_ip`, `cache_status`, `update_list`, and `get_usage` (an
-embedded operating manual; the server also advertises it via the initialize
-`instructions` field).
+`icloud-relay-lookup mcp` speaks JSON-RPC 2.0 over stdio. Tools: `check_ip`,
+`cache_status`, `update_list`, and `get_usage` (an embedded operating manual;
+the server also points to it in the MCP `instructions` it sends when a client
+opens it).
 
 **Arguments are checked strictly.** A call carrying an argument a tool does not
 declare fails, naming it — `arguments: json: unknown field "ipx"` — rather than
@@ -174,7 +174,8 @@ make test        # go test -race -cover ./...
 make check       # lint + test + build-all
 ```
 
-No external dependencies — standard library only. See
+No third-party dependencies — the standard library, plus the organization's
+module [nlink-jp/mcp](https://github.com/nlink-jp/mcp) for the MCP protocol. See
 [docs/en/architecture.md](docs/en/architecture.md) for the design rationale.
 
 ## License

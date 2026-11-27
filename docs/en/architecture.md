@@ -111,8 +111,11 @@ reasons as there:
   2 error); batch mode reserves the exit code for errors only.
 - **usage.md pinned by test**: the MCP manual cannot drift from the
   advertised tools without failing `usage_test.go`.
-- **Standard library only.** The tool's job is one HTTP GET, one CSV parse,
-  and one hash lookup; a dependency tree would cost more than it pays.
+- **No third-party dependencies.** The tool's job is one HTTP GET, one CSV
+  parse, and one hash lookup; a dependency tree would cost more than it pays.
+  The one module it takes is the organization's own nlink-jp/mcp, the MCP
+  protocol layer every nlink-jp server shares (organization ADR-030;
+  ADR-0001).
 
 ## What this tool deliberately does not know
 

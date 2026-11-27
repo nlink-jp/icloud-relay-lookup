@@ -19,9 +19,9 @@ import (
 //go:embed usage.md
 var usageMarkdown string
 
-// Instructions is the initialize-time hint (surfaced via the MCP
-// `instructions` field) that makes get_usage discoverable and steers clients
-// away from common errors.
+// Instructions is the hint a client receives when it opens the server (the
+// MCP `instructions` field, in initialize or server/discover) that makes
+// get_usage discoverable and steers clients away from common errors.
 const Instructions = "icloud-relay-lookup reports whether an IP address is an Apple iCloud Private Relay egress IP, " +
 	"fully offline from a locally cached copy of Apple's published list. " +
 	"Call cache_status first; if there is no list, call update_list (no credentials needed). " +

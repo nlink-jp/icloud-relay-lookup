@@ -102,9 +102,9 @@ Apple はリストを `ETag` + `cache-control: max-age=3600` 付きで配信し�
 それより前の `initialize` の握手（2025-11-25・2025-06-18・2024-11-05）です。パイプで流し込んだ要求には、
 入力の終わりで終了する前にすべて答えます。
 
-`icloud-relay-lookup mcp` は stdio 上の JSON-RPC 2.0（標準ライブラリのみ）。
+`icloud-relay-lookup mcp` は stdio 上の JSON-RPC 2.0。
 ツールは `check_ip`、`cache_status`、`update_list`、`get_usage`（組み込みの
-操作マニュアル。initialize の `instructions` フィールドでも案内されます）。
+操作マニュアル。クライアントがサーバーを開いたときに送る MCP の `instructions` でも案内されます）。
 
 **引数は厳格に検査されます.** ツールが宣言していない引数を含む呼び出しは、その
 名前を挙げて失敗します（`arguments: json: unknown field "ipx"`）。従来は無視して
@@ -170,7 +170,8 @@ make test        # go test -race -cover ./...
 make check       # lint + test + build-all
 ```
 
-外部依存なし — 標準ライブラリのみ。設計の背景は
+サードパーティ製の依存なし — 標準ライブラリと、MCP のプロトコルを担う組織の共通モジュール
+[nlink-jp/mcp](https://github.com/nlink-jp/mcp) だけを使います。設計の背景は
 [docs/ja/architecture.ja.md](docs/ja/architecture.ja.md) を参照してください。
 
 ## ライセンス
