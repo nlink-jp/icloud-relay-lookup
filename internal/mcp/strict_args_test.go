@@ -56,7 +56,6 @@ func TestMalformedArgumentsAreRefused(t *testing.T) {
 	}{
 		{"number for string", `{"ip":8}`},
 		{"string for array", `{"ips":"1.2.3.4"}`},
-		{"array for object", `["1.2.3.4"]`},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -84,5 +83,25 @@ func TestOmittedArgumentsStillMeanNone(t *testing.T) {
 		if isErr {
 			t.Errorf("cache_status with arguments %q was refused: %s", args, text)
 		}
+	}
+}
+
+// Arguments that are not an object never reach a tool: the protocol layer
+// refuses them with -32602 (server-migration §4), before decodeArgs.
+func TestNonObjectArgumentsAreAProtocolError(t *testing.T) {
+	e := newEngine(t, &fakeFetcher{body: sampleCSV, etag: `"v1"`}, true)
+	resps := rpc(t, e, `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check_ip","arguments":["1.2.3.4"]}}`)
+	if resps[0]["error"] == nil {
+		t.Errorf("array arguments were not a protocol error: %v", resps[0])
+	}
+}
+
+// encoding/json matches names case-insensitively; the schema does not. An
+// argument spelt in another case is refused by name.
+func TestAnArgumentInAnotherCaseIsRefused(t *testing.T) {
+	e := newEngine(t, &fakeFetcher{body: sampleCSV, etag: `"v1"`}, true)
+	text, isErr := callTool(t, e, "check_ip", `{"IP":"1.2.3.4"}`)
+	if !isErr || !strings.Contains(text, `unknown field "IP"`) {
+		t.Errorf("IP was accepted: %s", text)
 	}
 }
