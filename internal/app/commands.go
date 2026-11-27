@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/nlink-jp/icloud-relay-lookup/internal/engine"
@@ -180,6 +182,14 @@ func runStatus(out, errw io.Writer, e *engine.Engine) int {
 
 // ---- mcp ------------------------------------------------------------------
 
+// notifyContext is signal.NotifyContext, and mcpStdin and mcpStdout the
+// process's streams; tests stand in for them.
+var (
+	notifyContext           = signal.NotifyContext
+	mcpStdin      io.Reader = os.Stdin
+	mcpStdout     io.Writer = os.Stdout
+)
+
 func cmdMCP(args []string, version string) int {
 	fs := flag.NewFlagSet("mcp", flag.ContinueOnError)
 	var c commonFlags
@@ -192,7 +202,11 @@ func cmdMCP(args []string, version string) int {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		return exitError
 	}
-	if err := mcp.Serve(context.Background(), e, version, os.Stdin, os.Stdout); err != nil {
+	// SIGINT and SIGTERM cancel the server's ctx: it returns at once and its
+	// cleanup runs (server-migration §2).
+	ctx, stop := notifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := mcp.Serve(ctx, e, version, mcpStdin, mcpStdout); err != nil {
 		fmt.Fprintf(os.Stderr, "mcp: %v\n", err)
 		return exitError
 	}
