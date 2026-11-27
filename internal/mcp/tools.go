@@ -62,67 +62,61 @@ func decodeArgs(raw json.RawMessage, into any) error {
 	return nil
 }
 
+
 // toolsList returns the advertised tool set with JSON Schema for each input.
-func (s *server) toolsList() any {
+func (s *server) toolsList() []map[string]any {
 	strArray := map[string]any{"type": "array", "items": map[string]any{"type": "string"}}
-	return map[string]any{
-		"tools": []map[string]any{
-			{
-				"name":        "get_usage",
-				"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
-				"inputSchema": obj(map[string]any{}),
-			},
-			{
-				"name":        "check_ip",
-				"description": "Report whether one or more IP addresses are Apple iCloud Private Relay egress IPs, answered offline from the cached list. Returns is_private_relay per address, plus the matched prefix and geo hints (country / region / city) on a hit.",
-				"inputSchema": obj(map[string]any{
-					"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
-					"ips": strArray,
-				}),
-			},
-			{
-				"name":        "update_list",
-				"description": "Revalidate/download Apple's egress IP ranges list and rebuild the local store. Uses an ETag conditional GET, so an unchanged list is nearly free. No credentials required.",
-				"inputSchema": obj(map[string]any{}),
-			},
-			{
-				"name":        "cache_status",
-				"description": "Report the cached list's fetch time, range counts (v4/v6), ETag, source, and whether it is stale.",
-				"inputSchema": obj(map[string]any{}),
-			},
+	return []map[string]any{
+		{
+			"name":        "get_usage",
+			"description": "Return this server's operating manual (markdown): the tools, the offline list lifecycle, and the error-recovery table. Call it once before first use.",
+			"inputSchema": obj(map[string]any{}),
+		},
+		{
+			"name":        "check_ip",
+			"description": "Report whether one or more IP addresses are Apple iCloud Private Relay egress IPs, answered offline from the cached list. Returns is_private_relay per address, plus the matched prefix and geo hints (country / region / city) on a hit.",
+			"inputSchema": obj(map[string]any{
+				"ip":  map[string]any{"type": "string", "description": "A single IPv4 or IPv6 address."},
+				"ips": strArray,
+			}),
+		},
+		{
+			"name":        "update_list",
+			"description": "Revalidate/download Apple's egress IP ranges list and rebuild the local store. Uses an ETag conditional GET, so an unchanged list is nearly free. No credentials required.",
+			"inputSchema": obj(map[string]any{}),
+		},
+		{
+			"name":        "cache_status",
+			"description": "Report the cached list's fetch time, range counts (v4/v6), ETag, source, and whether it is stale.",
+			"inputSchema": obj(map[string]any{}),
 		},
 	}
 }
 
-func (s *server) toolsCall(ctx context.Context, params json.RawMessage) (toolResult, *rpcError) {
-	var p struct {
-		Name      string          `json:"name"`
-		Arguments json.RawMessage `json:"arguments"`
-	}
-	if err := json.Unmarshal(params, &p); err != nil {
-		return toolResult{}, &rpcError{Code: -32602, Message: "invalid params: " + err.Error()}
-	}
-	switch p.Name {
+// toolsCall dispatches one call by tool name and builds its result.
+func (s *server) toolsCall(ctx context.Context, name string, args json.RawMessage) toolResult {
+	switch name {
 	case "get_usage":
 		// No arguments — which still means "none", not "any".
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return textResult(false, usageMarkdown), nil
+		return textResult(false, usageMarkdown)
 	case "check_ip":
-		return s.toolCheckIP(p.Arguments), nil
+		return s.toolCheckIP(args)
 	case "update_list":
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return s.toolUpdate(ctx), nil
+		return s.toolUpdate(ctx)
 	case "cache_status":
-		if err := decodeArgs(p.Arguments, &struct{}{}); err != nil {
-			return textResult(true, err.Error()), nil
+		if err := decodeArgs(args, &struct{}{}); err != nil {
+			return textResult(true, err.Error())
 		}
-		return s.toolStatus(), nil
+		return s.toolStatus()
 	default:
-		return toolResult{}, &rpcError{Code: -32602, Message: "unknown tool: " + p.Name}
+		// Not reached: the protocol layer refuses a tool it did not register.
+		return textResult(true, "unknown tool: "+name)
 	}
 }
 

@@ -56,11 +56,9 @@ func newEngine(t *testing.T, f apple.Fetcher, preload bool) *engine.Engine {
 // the decoded responses.
 func rpc(t *testing.T, e *engine.Engine, lines ...string) []map[string]any {
 	t.Helper()
-	in := strings.NewReader(strings.Join(lines, "\n") + "\n")
-	var out strings.Builder
-	if err := Serve(context.Background(), e, "test", in, &out); err != nil {
-		t.Fatalf("Serve: %v", err)
-	}
+	out := serveOverClient(t, func(ctx context.Context, in io.Reader, w io.Writer) error {
+		return Serve(ctx, e, "test", in, w)
+	}, strings.Join(lines, "\n")+"\n")
 	var resps []map[string]any
 	dec := json.NewDecoder(strings.NewReader(out.String()))
 	for dec.More() {
@@ -102,9 +100,6 @@ func TestInitializeAndToolsList(t *testing.T) {
 		t.Fatalf("got %d responses, want 2 (notification must be silent)", len(resps))
 	}
 	init := resps[0]["result"].(map[string]any)
-	if init["protocolVersion"] != "2025-06-18" {
-		t.Errorf("protocolVersion = %v, want the requested revision the server supports", init["protocolVersion"])
-	}
 	if info := init["serverInfo"].(map[string]any); info["name"] != "icloud-relay-lookup" {
 		t.Errorf("serverInfo = %v", info)
 	}
@@ -245,46 +240,17 @@ func TestGetUsageAndUnknowns(t *testing.T) {
 	if resps[0]["error"] == nil {
 		t.Error("unknown tool did not return a JSON-RPC error")
 	}
-	resps = rpc(t, e, `{"jsonrpc":"2.0","id":10,"method":"no/such"}`)
-	if resps[0]["error"] == nil {
-		t.Error("unknown method did not return a JSON-RPC error")
-	}
 	resps = rpc(t, e, `{"jsonrpc":"2.0","id":11,"method":"ping"}`)
 	if resps[0]["error"] != nil {
 		t.Error("ping errored")
 	}
 }
 
-func TestMalformedJSONStops(t *testing.T) {
-	e := newEngine(t, &fakeFetcher{}, false)
-	in := strings.NewReader(`{"jsonrpc":"2.0","id":1,`)
-	var out strings.Builder
-	if err := Serve(context.Background(), e, "test", in, &out); err != nil {
-		t.Fatalf("Serve: %v", err)
-	}
-	if !strings.Contains(out.String(), "-32700") {
-		t.Errorf("no parse error emitted: %q", out.String())
-	}
-}
-
-func TestInitializeNegotiatesProtocolVersion(t *testing.T) {
-	cases := []struct{ params, want string }{
-		{`{"protocolVersion":"2025-11-25"}`, "2025-11-25"},
-		{`{"protocolVersion":"2025-06-18"}`, "2025-06-18"},
-		{`{"protocolVersion":"2024-11-05"}`, "2024-11-05"},
-		// 2025-03-26 requires accepting JSON-RPC batches, which this server does not.
-		{`{"protocolVersion":"2025-03-26"}`, "2025-11-25"},
-		// A revision the server does not satisfy must not be echoed back.
-		{`{"protocolVersion":"2026-07-28"}`, "2025-11-25"},
-		{`{"protocolVersion":""}`, "2025-11-25"},
-		{`{}`, "2025-11-25"},
-		{`not json`, "2025-11-25"},
-		{``, "2025-11-25"},
-	}
-	for _, c := range cases {
-		res := (&server{}).initializeResult(json.RawMessage(c.params)).(map[string]any)
-		if got := res["protocolVersion"]; got != c.want {
-			t.Errorf("initialize %s: protocolVersion = %v, want %s", c.params, got, c.want)
-		}
-	}
+// ADR-030 §7: the server against the three probe clients (legacy only,
+// dual-era, modern only).
+func TestAgainstTheProbeClients(t *testing.T) {
+	e := newEngine(t, &fakeFetcher{body: sampleCSV, etag: `"v1"`}, true)
+	probeMatrix(t, func(ctx context.Context, in io.Reader, w io.Writer) error {
+		return Serve(ctx, e, "test", in, w)
+	})
 }
