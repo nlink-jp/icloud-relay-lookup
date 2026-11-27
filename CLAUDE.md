@@ -28,12 +28,13 @@ internal/apple/         Fetcher interface + HTTPFetcher (ETag conditional GET, U
 internal/config/        Sectioned-TOML subset + env/flag resolution (no credentials)
 internal/engine/        LoadList / Update (ETag 304-aware, atomic) / Lookup / EnsureFresh / IsStale
 internal/app/           Dispatch + check/update/status/mcp; --json, batch, grep-style exit codes
-internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools (check_ip/cache_status/update_list/get_usage)
+internal/mcp/           MCP tools on nlink-jp/mcp's server.ToolServer (both eras; ADR-0001) (check_ip/cache_status/update_list/get_usage)
 ```
 
 Core logic takes io.Reader/io.Writer and injected dependencies for testability
-(the fetcher is an interface, mocked in tests). **No external dependencies —
-standard library only.** See [docs/en/architecture.md](docs/en/architecture.md)
+(the fetcher is an interface, mocked in tests). **No third-party dependencies** — the standard library, plus nlink-jp
+modules written on the same rule (`github.com/nlink-jp/mcp` for the MCP
+protocol, organization ADR-030; ADR-0001). See [docs/en/architecture.md](docs/en/architecture.md)
 for the "why".
 
 ## Key conventions

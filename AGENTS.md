@@ -30,7 +30,9 @@ is checked before the rename. The exclusion matches by function name, not by
 destination, so do not write a file with `fmt.Fprint*`. The four sibling lookup
 tools carry the same configuration.
 
-Go 1.27.4+. **No external dependencies** — standard library only.
+Go 1.27.4+. **No third-party dependencies** — the standard library, plus nlink-jp
+modules written on the same rule (`github.com/nlink-jp/mcp` for the MCP
+protocol, organization ADR-030; ADR-0001).
 
 ## Layout
 
@@ -41,7 +43,7 @@ internal/apple/         Fetcher interface + HTTPFetcher (ETag conditional GET, U
 internal/config/        Sectioned-TOML subset parser + env/flag resolution (no secrets).
 internal/engine/        Ties config+fetcher+store: LoadList, Update (304-aware), Lookup, EnsureFresh, IsStale.
 internal/app/           CLI: dispatch, check/update/status/mcp, output; grep-style + batch/JSON.
-internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools.
+internal/mcp/           MCP tools on nlink-jp/mcp's server.ToolServer (both eras; ADR-0001)
   usage.md              Embedded get_usage manual (pinned by usage_test.go).
 ```
 
@@ -73,6 +75,15 @@ internal/mcp/           Zero-dep stdio JSON-RPC 2.0 server + tools.
   warns and continues offline instead of failing.
 
 ## Gotchas
+
+- **The MCP protocol is nlink-jp/mcp's** (ADR-0001, organization ADR-030 §6).
+  `internal/mcp` never handles `initialize` or `server/discover` itself: `Serve`
+  registers `toolsList()` on a `server.ToolServer` and each handler calls
+  `toolsCall`. Tests replay their requests through the module's `client`
+  (`clienttest_test.go`) and run its three probe clients; do not write the
+  handshake by hand in a test. Before initialize, `tools/*` is -32602 — the
+  module's rule, not a defect. Argument names are matched exactly
+  (`decodeArgs`, `argNames`).
 
 - **Exit-code contract depends on mode:** single positional IP in text mode is
   grep-style tri-state `0` (is relay) / `1` (not) / `2` (error). Multiple IPs,
