@@ -27,7 +27,10 @@ All notable changes to this project are documented here. The format follows
   - a panic in a tool is answered -32603 and the server goes on (it crashed);
   - up to 256 calls wait behind a running one; more are refused with -32603
     "server busy";
-  - `notifications/cancelled` now cancels the call A cancelled `update_list` stops its download; the list is written to a temporary file and renamed, so the stored list stays as it was (a test pins it).
+  - `notifications/cancelled` now cancels the call.
+    A cancelled `update_list` stops its download; the list is written to a
+    temporary file and renamed, so the stored list stays as it was (a test
+    pins it).
 
   Requests piped in are still all answered before the server exits at end of
   input.
