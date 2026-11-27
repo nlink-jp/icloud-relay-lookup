@@ -39,6 +39,7 @@ All notable changes to this project are documented here. The format follows
 
 - An argument spelt in another case (`{"IP": ...}`) was accepted as the declared one; it is now refused by name.
 - SIGINT or SIGTERM ended the MCP server by killing the process; a signal now ends it through its context, so its cleanup runs.
+- An update cancelled once its answer had arrived — a 304, or a list read to its end — still wrote: a 304 bumped `fetched_at` in meta.json, a new list replaced the old. It now stops before writing.
 
 ## [0.2.2] - 2026-11-27
 
